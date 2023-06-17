@@ -13,6 +13,8 @@ const (
 	ScreenH = 1080
 )
 
+var hero = AABB{250, 400, 64, 64}
+
 type Boss struct {
 	AABB
 	DX, DY float64
@@ -23,8 +25,10 @@ func (b *Boss) Update() {
 	b.DY = UpdateDelta(b.DY, ebiten.IsKeyPressed(ebiten.KeyS), ebiten.IsKeyPressed(ebiten.KeyW))
 	b.DX = UpdateDelta(b.DX, ebiten.IsKeyPressed(ebiten.KeyD), ebiten.IsKeyPressed(ebiten.KeyA))
 
-	b.X = Clamp(0, b.X+b.DX, ScreenW-b.W)
-	b.Y = Clamp(0, b.Y+b.DY, ScreenH-b.H)
+	b.X += b.DX
+	b.Y += b.DY
+
+	b.Detangle(hero)
 }
 
 func (b *Boss) Draw(dst *ebiten.Image) {
@@ -54,12 +58,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0xF0, 0xF0, 0xF0, 0xFF})
 	g.Boss.Draw(screen)
 
-	o := AABB{250, 400, 64, 64}
 	c := color.RGBA{0x00, 0xFF, 0x00, 0xFF}
-	if Collide(g.Boss.AABB, o) {
+	if g.Boss.Collide(hero) {
 		c = color.RGBA{0xFF, 0x00, 0x00, 0xFF}
 	}
-	ebitenutil.DrawRect(screen, o.X, o.Y, o.W, o.H, c)
+	ebitenutil.DrawRect(screen, hero.X, hero.Y, hero.W, hero.H, c)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

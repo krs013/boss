@@ -8,6 +8,16 @@ func Clamp(a, x, b float64) float64 {
 	return math.Max(a, math.Min(x, b))
 }
 
+func Unclamp(a, x, b float64) float64 {
+	if x <= a || x >= b {
+		return x
+	}
+	if x >= (a+b)/2 {
+		return b
+	}
+	return a
+}
+
 func SliceContains[T comparable](slice []T, x T) bool {
 	for _, y := range slice {
 		if x == y {

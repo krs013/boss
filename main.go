@@ -13,12 +13,43 @@ const (
 	ScreenH = 1080
 )
 
+var (
+	Color0 = color.RGBA{0xF6, 0xD6, 0xBD, 0xFF}
+	Color1 = color.RGBA{0xC3, 0xA3, 0x8A, 0xFF}
+	Color2 = color.RGBA{0x99, 0x75, 0x77, 0xFF}
+	Color3 = color.RGBA{0x81, 0x62, 0x71, 0xFF}
+	Color4 = color.RGBA{0x4E, 0x49, 0x5F, 0xFF}
+	Color5 = color.RGBA{0x20, 0x39, 0x4F, 0xFF}
+	Color6 = color.RGBA{0x0F, 0x2A, 0x3F, 0xFF}
+	Color7 = color.RGBA{0x08, 0x14, 0x1E, 0xFF}
+)
+
+type Room struct {
+	Bounds    AABB
+	Obstacles []AABB
+	Triggers  map[AABB]func()
+
+	Floor  color.Color
+	Wall   color.Color
+	Button color.Color
+}
+
+func (r Room) Draw(dst *ebiten.Image) {
+	ebitenutil.DrawRect(dst, r.Bounds.X, r.Bounds.Y, r.Bounds.W, r.Bounds.H, r.Floor)
+	for t := range r.Triggers {
+		ebitenutil.DrawRect(dst, t.X, t.Y, t.W, t.H, r.Button)
+	}
+	for _, o := range r.Obstacles {
+		ebitenutil.DrawRect(dst, o.X, o.Y, o.W, o.H, r.Wall)
+	}
+}
+
 type Mob struct {
 	AABB
 	color.Color
 }
 
-func (m *Mob) Draw(dst *ebiten.Image) {
+func (m Mob) Draw(dst *ebiten.Image) {
 	ebitenutil.DrawRect(dst, m.X, m.Y, m.W, m.H, m.Color)
 }
 
@@ -43,25 +74,36 @@ func (b *Boss) Update(g *Game) {
 }
 
 type Game struct {
+	Room *Room
 	Boss *Boss
 	Hero *Mob
 }
 
 func NewGame() *Game {
+	room := &Room{
+		Bounds: AABB{0, 0, ScreenW, ScreenH},
+		Obstacles: []AABB{
+			{10, 10, 300, 40},
+			{10, 40, 40, 200},
+		},
+		Triggers: map[AABB]func(){
+			{500, 500, 64, 64}: nil,
+		},
+		Floor:  Color7,
+		Wall:   Color6,
+		Button: Color3,
+	}
 	boss := &Boss{
 		Mob: Mob{
-			AABB:  AABB{10, 10, 128, 128},
-			Color: color.RGBA{0x00, 0x00, 0xFF, 0xFF},
+			AABB:  AABB{50, 50, 128, 128},
+			Color: Color0,
 		},
 	}
 	hero := &Mob{
 		AABB:  AABB{250, 400, 64, 64},
-		Color: color.RGBA{0x00, 0xFF, 0x00, 0xFF},
+		Color: Color1,
 	}
-	return &Game{
-		boss,
-		hero,
-	}
+	return &Game{room, boss, hero}
 }
 
 func (g *Game) Update() error {
@@ -70,7 +112,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{0xF0, 0xF0, 0xF0, 0xFF})
+	g.Room.Draw(screen)
 	g.Boss.Draw(screen)
 	g.Hero.Draw(screen)
 }

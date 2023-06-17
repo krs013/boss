@@ -16,3 +16,22 @@ func SliceContains[T comparable](slice []T, x T) bool {
 	}
 	return false
 }
+
+func UpdateDelta(delta float64, inc, dec bool) float64 {
+	const (
+		DeltaDecay = .75
+		DeltaStep  = 1
+		DeltaMax   = 5
+	)
+
+	if inc == dec {
+		return delta * DeltaDecay
+	}
+	if inc {
+		delta += DeltaStep
+	}
+	if dec {
+		delta -= DeltaStep
+	}
+	return Clamp(-DeltaMax, delta, DeltaMax)
+}

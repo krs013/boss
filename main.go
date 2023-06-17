@@ -11,34 +11,12 @@ import (
 const (
 	ScreenW = 1920
 	ScreenH = 1080
-
-	DeltaDecay = .75
-	DeltaStep  = 1
-	DeltaMax   = 5
 )
-
-type AABB struct {
-	X, Y float64
-	W, H float64
-}
 
 type Boss struct {
 	AABB
 	DX, DY float64
 	color.Color
-}
-
-func UpdateDelta(delta float64, inc, dec bool) float64 {
-	if inc == dec {
-		return delta * DeltaDecay
-	}
-	if inc {
-		delta += DeltaStep
-	}
-	if dec {
-		delta -= DeltaStep
-	}
-	return Clamp(-DeltaMax, delta, DeltaMax)
 }
 
 func (b *Boss) Update() {
@@ -59,8 +37,8 @@ type Game struct {
 
 func NewGame() *Game {
 	boss := &Boss{
-		AABB:  AABB{10, 10, 64, 64},
-		Color: color.RGBA{0xFF, 0x00, 0x00, 0xFF},
+		AABB:  AABB{10, 10, 128, 128},
+		Color: color.RGBA{0x00, 0x00, 0xFF, 0xFF},
 	}
 	return &Game{
 		boss,
@@ -75,6 +53,13 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0xF0, 0xF0, 0xF0, 0xFF})
 	g.Boss.Draw(screen)
+
+	o := AABB{250, 400, 64, 64}
+	c := color.RGBA{0x00, 0xFF, 0x00, 0xFF}
+	if Collide(g.Boss.AABB, o) {
+		c = color.RGBA{0xFF, 0x00, 0x00, 0xFF}
+	}
+	ebitenutil.DrawRect(screen, o.X, o.Y, o.W, o.H, c)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

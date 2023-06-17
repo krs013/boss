@@ -59,11 +59,9 @@ type Boss struct {
 }
 
 func (b *Boss) Update(g *Game) {
-	b.DY = UpdateDelta(b.DY, ebiten.IsKeyPressed(ebiten.KeyS), ebiten.IsKeyPressed(ebiten.KeyW))
 	b.DX = UpdateDelta(b.DX, ebiten.IsKeyPressed(ebiten.KeyD), ebiten.IsKeyPressed(ebiten.KeyA))
-
-	b.X += b.DX
-	b.Y += b.DY
+	b.DY = UpdateDelta(b.DY, ebiten.IsKeyPressed(ebiten.KeyS), ebiten.IsKeyPressed(ebiten.KeyW))
+	b.Move(b.DX, b.DY)
 
 	b.DetangleRoom(g.Room)
 
@@ -74,10 +72,24 @@ func (b *Boss) Update(g *Game) {
 	b.Detangle(g.Hero.AABB)
 }
 
+type Hero struct {
+	Mob
+	DX, DY float64
+}
+
+func (h *Hero) Update(g *Game) {
+	tx := g.Boss.X + g.Boss.W/2 - h.W/2
+	ty := g.Boss.Y + g.Boss.H/2 - h.H/2
+
+	h.DX = UpdateDelta(h.DX, tx > h.X, tx < h.X)
+	h.DY = UpdateDelta(h.DY, ty > h.Y, ty < h.Y)
+	h.Move(h.DX, h.DY)
+}
+
 type Game struct {
 	Room *Room
 	Boss *Boss
-	Hero *Mob
+	Hero *Hero
 }
 
 func NewGame() *Game {
@@ -101,14 +113,18 @@ func NewGame() *Game {
 			Color: Color0,
 		},
 	}
-	hero := &Mob{
-		AABB:  AABB{250, 400, 64, 64},
-		Color: Color1,
+	hero := &Hero{
+		Mob: Mob{
+			AABB:  AABB{250, 400, 64, 64},
+			Color: Color1,
+		},
 	}
 	return &Game{room, boss, hero}
 }
 
 func (g *Game) Update() error {
+	// Boss goes after hero, since boss resolves boss-hero collision
+	g.Hero.Update(g)
 	g.Boss.Update(g)
 	return nil
 }

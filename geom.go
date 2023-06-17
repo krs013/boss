@@ -8,6 +8,11 @@ type AABB struct {
 	X, Y, W, H float64
 }
 
+func (a *AABB) Move(dx, dy float64) {
+	a.X += dx
+	a.Y += dy
+}
+
 func (a AABB) Collide(b AABB) bool {
 	return b.X-a.W < a.X && a.X < b.X+b.W &&
 		b.Y-a.H < a.Y && a.Y < b.Y+b.H

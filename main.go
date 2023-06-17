@@ -24,19 +24,32 @@ var (
 	Color7 = color.RGBA{0x08, 0x14, 0x1E, 0xFF}
 )
 
+type Trigger struct {
+	AABB
+	Fn func()
+}
+
 type Room struct {
 	Width, Height float64
 	Obstacles     []AABB
-	Triggers      map[AABB]func()
+	Triggers      []Trigger
 
 	Floor  color.Color
 	Wall   color.Color
 	Button color.Color
 }
 
+func (r Room) Update(g *Game) {
+	for _, t := range r.Triggers {
+		if g.Boss.Collide(t.AABB) {
+			t.Fn()
+		}
+	}
+}
+
 func (r Room) Draw(dst *ebiten.Image) {
 	ebitenutil.DrawRect(dst, 0, 0, r.Width, r.Height, r.Floor)
-	for t := range r.Triggers {
+	for _, t := range r.Triggers {
 		ebitenutil.DrawRect(dst, t.X, t.Y, t.W, t.H, r.Button)
 	}
 	for _, o := range r.Obstacles {
@@ -100,9 +113,6 @@ func NewGame() *Game {
 			{10, 10, 300, 40},
 			{10, 40, 40, 200},
 		},
-		Triggers: map[AABB]func(){
-			{500, 500, 64, 64}: nil,
-		},
 		Floor:  Color7,
 		Wall:   Color6,
 		Button: Color3,
@@ -119,13 +129,20 @@ func NewGame() *Game {
 			Color: Color1,
 		},
 	}
+	room.Triggers = append(room.Triggers, Trigger{
+		AABB: AABB{500, 500, 64, 64},
+		Fn: func() {
+			hero.X = ScreenW / 2
+			hero.Y = ScreenH / 2
+		},
+	})
 	return &Game{room, boss, hero}
 }
 
 func (g *Game) Update() error {
-	// Boss goes after hero, since boss resolves boss-hero collision
 	g.Hero.Update(g)
 	g.Boss.Update(g)
+	g.Room.Update(g)
 	return nil
 }
 

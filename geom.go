@@ -23,6 +23,11 @@ func (a *AABB) Detangle(b AABB) {
 	}
 }
 
+func (a *AABB) ClampToBound(width, height float64) {
+	a.X = Clamp(0, a.X, width-a.W)
+	a.Y = Clamp(0, a.Y, height-a.H)
+}
+
 func Clamp(a, x, b float64) float64 {
 	return math.Max(a, math.Min(x, b))
 }

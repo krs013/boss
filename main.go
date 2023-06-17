@@ -6,7 +6,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
@@ -27,8 +26,6 @@ type Boss struct {
 	AABB
 	DX, DY float64
 	color.Color
-
-	Keys []ebiten.Key
 }
 
 func UpdateDelta(delta float64, inc, dec bool) float64 {
@@ -45,9 +42,8 @@ func UpdateDelta(delta float64, inc, dec bool) float64 {
 }
 
 func (b *Boss) Update() {
-	b.Keys = inpututil.AppendPressedKeys(b.Keys[:0])
-	b.DY = UpdateDelta(b.DY, SliceContains(b.Keys, ebiten.KeyS), SliceContains(b.Keys, ebiten.KeyW))
-	b.DX = UpdateDelta(b.DX, SliceContains(b.Keys, ebiten.KeyD), SliceContains(b.Keys, ebiten.KeyA))
+	b.DY = UpdateDelta(b.DY, ebiten.IsKeyPressed(ebiten.KeyS), ebiten.IsKeyPressed(ebiten.KeyW))
+	b.DX = UpdateDelta(b.DX, ebiten.IsKeyPressed(ebiten.KeyD), ebiten.IsKeyPressed(ebiten.KeyA))
 
 	b.X = Clamp(0, b.X+b.DX, ScreenW-b.W)
 	b.Y = Clamp(0, b.Y+b.DY, ScreenH-b.H)

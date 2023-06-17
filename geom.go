@@ -23,6 +23,13 @@ func (a *AABB) Detangle(b AABB) {
 	}
 }
 
+func (a *AABB) DetangleRoom(r *Room) {
+	for _, o := range r.Obstacles {
+		a.Detangle(o)
+	}
+	a.ClampToBound(r.Width, r.Height)
+}
+
 func (a *AABB) ClampToBound(width, height float64) {
 	a.X = Clamp(0, a.X, width-a.W)
 	a.Y = Clamp(0, a.Y, height-a.H)

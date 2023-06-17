@@ -25,9 +25,9 @@ var (
 )
 
 type Room struct {
-	Bounds    AABB
-	Obstacles []AABB
-	Triggers  map[AABB]func()
+	Width, Height float64
+	Obstacles     []AABB
+	Triggers      map[AABB]func()
 
 	Floor  color.Color
 	Wall   color.Color
@@ -35,7 +35,7 @@ type Room struct {
 }
 
 func (r Room) Draw(dst *ebiten.Image) {
-	ebitenutil.DrawRect(dst, r.Bounds.X, r.Bounds.Y, r.Bounds.W, r.Bounds.H, r.Floor)
+	ebitenutil.DrawRect(dst, 0, 0, r.Width, r.Height, r.Floor)
 	for t := range r.Triggers {
 		ebitenutil.DrawRect(dst, t.X, t.Y, t.W, t.H, r.Button)
 	}
@@ -64,11 +64,12 @@ func (b *Boss) Update(g *Game) {
 
 	b.X += b.DX
 	b.Y += b.DY
-	b.ClampToBound(ScreenW, ScreenH)
+
+	b.DetangleRoom(g.Room)
 
 	// Boss pushes the hero, so hero does the detangle, not boss.
 	g.Hero.Detangle(b.AABB)
-	g.Hero.ClampToBound(ScreenW, ScreenH)
+	g.Hero.DetangleRoom(g.Room)
 	// Hero might push back if they don't fit, so now boss detangles
 	b.Detangle(g.Hero.AABB)
 }
@@ -81,7 +82,8 @@ type Game struct {
 
 func NewGame() *Game {
 	room := &Room{
-		Bounds: AABB{0, 0, ScreenW, ScreenH},
+		Width:  ScreenW,
+		Height: ScreenH,
 		Obstacles: []AABB{
 			{10, 10, 300, 40},
 			{10, 40, 40, 200},

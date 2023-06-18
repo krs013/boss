@@ -77,10 +77,13 @@ func (b *Boss) Update(g *Game) {
 	b.Move(b.DX, b.DY)
 
 	b.DetangleRoom(g.Room)
+	b.ClampToRoom(g.Room)
 
 	// Boss pushes the hero, so hero does the detangle, not boss.
 	g.Hero.Detangle(b.AABB)
+	// After hero gets pushed, it might need to avoid obstacles.
 	g.Hero.DetangleRoom(g.Room)
+	g.Hero.ClampToRoom(g.Room)
 	// Hero might push back if they don't fit, so now boss detangles
 	b.Detangle(g.Hero.AABB)
 }
@@ -140,25 +143,30 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
+	// NB: Order matters here! Only the Boss resolves hero-boss pushing
+	// interaction, so boss must go after hero has done naive moves.
 	g.Hero.Update(g)
 	g.Boss.Update(g)
+	// Once boss has moved, see if any triggers were tripped.
 	g.Room.Update(g)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// NB: Order matters here! Later stuff draws over earlier stuff.
 	g.Room.Draw(screen)
-	g.Boss.Draw(screen)
 	g.Hero.Draw(screen)
+	g.Boss.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	// Don't get fancy here - just let Ebitengine handle scaling stuff for us.
 	return ScreenW, ScreenH
 }
 
 func main() {
-	ebiten.SetWindowSize(640, 480)
-	ebiten.SetWindowTitle("Hello, World!")
+	ebiten.SetWindowSize(ScreenW, ScreenH)
+	ebiten.SetWindowTitle("You're the Boss!")
 	if err := ebiten.RunGame(NewGame()); err != nil {
 		log.Fatal(err)
 	}

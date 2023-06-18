@@ -9,8 +9,8 @@ type AABB struct {
 	X, Y, W, H float64
 }
 
-// Move translates the AABB by (dx, dy).
-func (a *AABB) Move(dx, dy float64) {
+// Translate moves the AABB by (dx, dy).
+func (a *AABB) Translate(dx, dy float64) {
 	a.X += dx
 	a.Y += dy
 }

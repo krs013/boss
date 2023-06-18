@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	ScreenW = 1920
-	ScreenH = 1080
+	ScreenWidth  = 1920
+	ScreenHeight = 1080
 )
 
+// NYX8 Palete - https://lospec.com/palette-list/nyx8
 var (
 	Color0 = color.RGBA{0xF6, 0xD6, 0xBD, 0xFF}
 	Color1 = color.RGBA{0xC3, 0xA3, 0x8A, 0xFF}
@@ -42,7 +43,9 @@ type Room struct {
 func (r Room) Update(g *Game) {
 	for _, t := range r.Triggers {
 		if g.Boss.Collide(t.AABB) {
-			t.Fn()
+			if t.Fn != nil {
+				t.Fn()
+			}
 		}
 	}
 }
@@ -59,6 +62,9 @@ func (r Room) Draw(dst *ebiten.Image) {
 
 type Mob struct {
 	AABB
+	TargetX, TargetY float64
+	DX, DY           float64
+
 	color.Color
 }
 
@@ -66,22 +72,31 @@ func (m Mob) Draw(dst *ebiten.Image) {
 	ebitenutil.DrawRect(dst, m.X, m.Y, m.W, m.H, m.Color)
 }
 
+// TrackTarget updates the Mob DX, DY in the direction of the target.
+func (m *Mob) TrackTarget() {
+	m.DX = UpdateDelta(m.DX, m.TargetX > m.X, m.TargetX < m.X)
+	m.DY = UpdateDelta(m.DY, m.TargetY > m.Y, m.TargetY < m.Y)
+}
+
+func (m *Mob) Move() {
+	m.Translate(m.DX, m.DY)
+}
+
 type Boss struct {
 	Mob
-	DX, DY float64
 }
 
 func (b *Boss) Update(g *Game) {
 	b.DX = UpdateDelta(b.DX, ebiten.IsKeyPressed(ebiten.KeyD), ebiten.IsKeyPressed(ebiten.KeyA))
 	b.DY = UpdateDelta(b.DY, ebiten.IsKeyPressed(ebiten.KeyS), ebiten.IsKeyPressed(ebiten.KeyW))
-	b.Move(b.DX, b.DY)
 
+	b.Move()
 	b.DetangleRoom(g.Room)
 	b.ClampToRoom(g.Room)
 
 	// Boss pushes the hero, so hero does the detangle, not boss.
 	g.Hero.Detangle(b.AABB)
-	// After hero gets pushed, it might need to avoid obstacles.
+	// After hero gets pushed, hero might need to avoid obstacles.
 	g.Hero.DetangleRoom(g.Room)
 	g.Hero.ClampToRoom(g.Room)
 	// Hero might push back if they don't fit, so now boss detangles
@@ -90,16 +105,16 @@ func (b *Boss) Update(g *Game) {
 
 type Hero struct {
 	Mob
-	DX, DY float64
 }
 
 func (h *Hero) Update(g *Game) {
-	tx := g.Boss.X + g.Boss.W/2 - h.W/2
-	ty := g.Boss.Y + g.Boss.H/2 - h.H/2
+	// Set target so hero center moves towards the boss center.
+	h.TargetX = g.Boss.X + g.Boss.W/2 - h.W/2
+	h.TargetY = g.Boss.Y + g.Boss.H/2 - h.H/2
+	h.TrackTarget()
 
-	h.DX = UpdateDelta(h.DX, tx > h.X, tx < h.X)
-	h.DY = UpdateDelta(h.DY, ty > h.Y, ty < h.Y)
-	h.Move(h.DX, h.DY)
+	// Just do the move. Boss will handle collisions and pushing.
+	h.Move()
 }
 
 type Game struct {
@@ -110,8 +125,8 @@ type Game struct {
 
 func NewGame() *Game {
 	room := &Room{
-		Width:  ScreenW,
-		Height: ScreenH,
+		Width:  ScreenWidth,
+		Height: ScreenHeight,
 		Obstacles: []AABB{
 			{10, 10, 300, 40},
 			{10, 40, 40, 200},
@@ -135,8 +150,8 @@ func NewGame() *Game {
 	room.Triggers = append(room.Triggers, Trigger{
 		AABB: AABB{500, 500, 64, 64},
 		Fn: func() {
-			hero.X = ScreenW / 2
-			hero.Y = ScreenH / 2
+			hero.X = ScreenWidth / 2
+			hero.Y = ScreenHeight / 2
 		},
 	})
 	return &Game{room, boss, hero}
@@ -161,11 +176,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	// Don't get fancy here - just let Ebitengine handle scaling stuff for us.
-	return ScreenW, ScreenH
+	return ScreenWidth, ScreenHeight
 }
 
 func main() {
-	ebiten.SetWindowSize(ScreenW, ScreenH)
+	ebiten.SetWindowSize(ScreenWidth, ScreenHeight)
 	ebiten.SetWindowTitle("You're the Boss!")
 	if err := ebiten.RunGame(NewGame()); err != nil {
 		log.Fatal(err)

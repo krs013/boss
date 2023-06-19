@@ -90,28 +90,17 @@ func SliceContains[T comparable](slice []T, x T) bool {
 }
 
 // UpdateDelta gets a desired component velocity subject to game constraints.
-// Given a current veleocity delta, we indicate whether we want to increment or
-// decrement the velocity. If we want an increment, we increase the delta by
-// the delta step up to the delta max. If we want a decrement, we decrease the
-// delta by the delta step up to negative delta max. If we desire no change, we
-// apply a multiplicative decay to the delta. If both increment and decrement
-// are desired, they cancel and we apply the decay.
-func UpdateDelta(delta float64, increment, decrement bool) float64 {
+func UpdateDelta(delta, actual, target float64) float64 {
 	const (
-		DeltaDecay = .75
+		DeltaDecay = .65
 		DeltaStep  = 1
 		DeltaMax   = 5
 	)
 
-	// If both are false, or both are true (canceling each other), apply decay.
-	if increment == decrement {
+	err := target - actual
+	if err == 0 {
 		return delta * DeltaDecay
 	}
-	if increment {
-		delta += DeltaStep
-	}
-	if decrement {
-		delta -= DeltaStep
-	}
-	return Clamp(-DeltaMax, delta, DeltaMax)
+	step := Clamp(-DeltaStep, err-delta*DeltaMax/DeltaStep, DeltaStep)
+	return Clamp(-DeltaMax, delta+step, DeltaMax)
 }

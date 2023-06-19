@@ -74,8 +74,8 @@ func (m Mob) Draw(dst *ebiten.Image) {
 
 // TrackTarget updates the Mob DX, DY in the direction of the target.
 func (m *Mob) TrackTarget() {
-	m.DX = UpdateDelta(m.DX, m.TargetX > m.X, m.TargetX < m.X)
-	m.DY = UpdateDelta(m.DY, m.TargetY > m.Y, m.TargetY < m.Y)
+	m.DX = UpdateDelta(m.DX, m.X, m.TargetX)
+	m.DY = UpdateDelta(m.DY, m.Y, m.TargetY)
 }
 
 func (m *Mob) Move() {
@@ -86,9 +86,27 @@ type Boss struct {
 	Mob
 }
 
+func (b *Boss) KeyTarget() (x, y float64) {
+	x, y = b.X, b.Y
+	if ebiten.IsKeyPressed(ebiten.KeyD) {
+		x += ScreenWidth
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
+		x -= ScreenWidth
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyS) {
+		y += ScreenHeight
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyW) {
+		y -= ScreenHeight
+	}
+	return x, y
+}
+
 func (b *Boss) Update(g *Game) {
-	b.DX = UpdateDelta(b.DX, ebiten.IsKeyPressed(ebiten.KeyD), ebiten.IsKeyPressed(ebiten.KeyA))
-	b.DY = UpdateDelta(b.DY, ebiten.IsKeyPressed(ebiten.KeyS), ebiten.IsKeyPressed(ebiten.KeyW))
+	tx, ty := b.KeyTarget()
+	b.DX = UpdateDelta(b.DX, b.X, tx)
+	b.DY = UpdateDelta(b.DY, b.Y, ty)
 
 	b.Move()
 	b.DetangleRoom(g.Room)
@@ -111,6 +129,8 @@ func (h *Hero) Update(g *Game) {
 	// Set target so hero center moves towards the boss center.
 	h.TargetX = g.Boss.X + g.Boss.W/2 - h.W/2
 	h.TargetY = g.Boss.Y + g.Boss.H/2 - h.H/2
+	h.TargetX = 800
+	h.TargetY = 300
 	h.TrackTarget()
 
 	// Just do the move. Boss will handle collisions and pushing.

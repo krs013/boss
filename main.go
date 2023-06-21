@@ -184,6 +184,7 @@ func (g *Game) Update() error {
 	g.Boss.Update(g)
 	// Once boss has moved, see if any triggers were tripped.
 	g.Room.Update(g)
+
 	return nil
 }
 

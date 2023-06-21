@@ -11,8 +11,8 @@ type AABB struct {
 
 // Translate moves the AABB by (dx, dy).
 func (a *AABB) Translate(dx, dy float64) {
-	a.X += dx
-	a.Y += dy
+	a.X = math.Round(a.X + dx)
+	a.Y = math.Round(a.Y + dy)
 }
 
 // Collide returns true if this AABB overlaps with the other AABB.
@@ -95,12 +95,18 @@ func UpdateDelta(delta, actual, target float64) float64 {
 		DeltaDecay = .65
 		DeltaStep  = 1
 		DeltaMax   = 5
+		DeltaMin   = 0.0001
 	)
 
 	err := target - actual
 	if err == 0 {
-		return delta * DeltaDecay
+		delta *= DeltaDecay
+	} else {
+		step := Clamp(-DeltaStep, err-delta*DeltaMax/DeltaStep, DeltaStep)
+		delta = Clamp(-DeltaMax, delta+step, DeltaMax)
 	}
-	step := Clamp(-DeltaStep, err-delta*DeltaMax/DeltaStep, DeltaStep)
-	return Clamp(-DeltaMax, delta+step, DeltaMax)
+	if math.Abs(delta) < DeltaMin {
+		return 0
+	}
+	return delta
 }

@@ -62,6 +62,7 @@ func (r Room) Draw(dst *ebiten.Image) {
 
 type Mob struct {
 	AABB
+	HasTarget        bool
 	TargetX, TargetY float64
 	DX, DY           float64
 
@@ -74,8 +75,13 @@ func (m Mob) Draw(dst *ebiten.Image) {
 
 // TrackTarget updates the Mob DX, DY in the direction of the target.
 func (m *Mob) TrackTarget() {
-	m.DX = UpdateDelta(m.DX, m.X, m.TargetX)
-	m.DY = UpdateDelta(m.DY, m.Y, m.TargetY)
+	if m.HasTarget {
+		m.DX = UpdateDelta(m.DX, m.X, m.TargetX)
+		m.DY = UpdateDelta(m.DY, m.Y, m.TargetY)
+	} else {
+		m.DX = UpdateDelta(m.DX, m.X, m.X)
+		m.DY = UpdateDelta(m.DY, m.Y, m.Y)
+	}
 }
 
 func (m *Mob) Move() {
@@ -86,25 +92,46 @@ type Boss struct {
 	Mob
 }
 
-func (b *Boss) KeyTarget() (x, y float64) {
+func (b *Boss) KeyTarget() (x, y float64, ok bool) {
 	x, y = b.X, b.Y
+	ok = false
 	if ebiten.IsKeyPressed(ebiten.KeyD) {
 		x += ScreenWidth
+		ok = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
 		x -= ScreenWidth
+		ok = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
 		y += ScreenHeight
+		ok = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
 		y -= ScreenHeight
+		ok = true
 	}
-	return x, y
+	return x, y, ok
+}
+
+func (b *Boss) MouseTarget() (x, y float64, ok bool) {
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButton0) {
+		cx, cy := ebiten.CursorPosition()
+		return float64(cx) - b.W/2, float64(cy) - b.H/2, true
+	}
+	return b.X, b.Y, false
 }
 
 func (b *Boss) Update(g *Game) {
-	tx, ty := b.KeyTarget()
+	tx, ty, ok := b.KeyTarget()
+	if ok {
+		b.HasTarget = false
+	} else if tx, ty, ok = b.MouseTarget(); ok {
+		b.HasTarget = true
+		b.TargetX, b.TargetY = tx, ty
+	} else if b.HasTarget {
+		tx, ty = b.TargetX, b.TargetY
+	}
 	b.DX = UpdateDelta(b.DX, b.X, tx)
 	b.DY = UpdateDelta(b.DY, b.Y, ty)
 
@@ -129,8 +156,6 @@ func (h *Hero) Update(g *Game) {
 	// Set target so hero center moves towards the boss center.
 	h.TargetX = g.Boss.X + g.Boss.W/2 - h.W/2
 	h.TargetY = g.Boss.Y + g.Boss.H/2 - h.H/2
-	h.TargetX = 800
-	h.TargetY = 300
 	h.TrackTarget()
 
 	// Just do the move. Boss will handle collisions and pushing.

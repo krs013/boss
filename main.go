@@ -1,17 +1,88 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	"image"
 	"image/color"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
 )
 
 const (
 	ScreenWidth  = 1280
-	ScreenHeight = 800  // Or 720 for 16:9 aspect ratio
+	ScreenHeight = 800 // Or 720 for 16:9 aspect ratio
 )
+
+var FrameCount = 1
+
+type Animation struct {
+	Sheet            *ebiten.Image
+	X, Y, W, H, N, S int
+	Op               ebiten.GeoM
+}
+
+func PlaceholderAnimations() (idle, left, right *Animation) {
+	img, _, err := image.Decode(bytes.NewReader(images.Runner_png))
+	if err != nil {
+		log.Fatal(err)
+	}
+	sheet := ebiten.NewImageFromImage(img)
+
+	op := ebiten.GeoM{}
+	op.Scale(4, 4)
+	idle = &Animation{
+		Sheet: sheet,
+		X:     0,
+		Y:     0,
+		W:     32,
+		H:     32,
+		N:     5,
+		S:     5,
+		Op:    op,
+	}
+
+	right = &Animation{
+		Sheet: sheet,
+		X:     0,
+		Y:     32,
+		W:     32,
+		H:     32,
+		N:     8,
+		S:     5,
+		Op:    op,
+	}
+
+	op.Scale(-1, 1)
+	op.Translate(128, 0)
+	left = &Animation{
+		Sheet: sheet,
+		X:     0,
+		Y:     32,
+		W:     32,
+		H:     32,
+		N:     8,
+		S:     5,
+		Op:    op,
+	}
+
+	return idle, left, right
+}
+
+func (a Animation) Draw(dst *ebiten.Image, x, y float64) {
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Concat(a.Op)
+	op.GeoM.Translate(x, y)
+	i := (FrameCount / a.S) % a.N
+	rect := image.Rect(a.X+i*a.W, a.Y, a.X+(i+1)*a.W, a.Y+a.H)
+	sprite := a.Sheet.SubImage(rect).(*ebiten.Image)
+	dst.DrawImage(sprite, op)
+	ebitenutil.DebugPrintAt(dst, fmt.Sprintf("%d %d", FrameCount, i), 0, 0)
+	ebitenutil.DebugPrintAt(dst, fmt.Sprintf("%f %f", ebiten.ActualFPS(), ebiten.ActualTPS()), 0, 20)
+}
 
 // NYX8 Palete - https://lospec.com/palette-list/nyx8
 var (
@@ -67,10 +138,20 @@ type Mob struct {
 	DX, DY           float64
 
 	color.Color
+	IdleAnimation  *Animation
+	LeftAnimation  *Animation
+	RightAnimation *Animation
 }
 
 func (m Mob) Draw(dst *ebiten.Image) {
 	ebitenutil.DrawRect(dst, m.X, m.Y, m.W, m.H, m.Color)
+	if m.DX == 0 && m.DY == 0 && m.IdleAnimation != nil {
+		m.IdleAnimation.Draw(dst, m.X, m.Y)
+	} else if m.DX > 0 && m.RightAnimation != nil {
+		m.RightAnimation.Draw(dst, m.X, m.Y)
+	} else if m.LeftAnimation != nil {
+		m.LeftAnimation.Draw(dst, m.X, m.Y)
+	}
 }
 
 // TrackTarget updates the Mob DX, DY in the direction of the target.
@@ -180,10 +261,14 @@ func NewGame() *Game {
 		Wall:   Color6,
 		Button: Color3,
 	}
+	idle, left, right := PlaceholderAnimations()
 	boss := &Boss{
 		Mob: Mob{
-			AABB:  AABB{50, 50, 128, 128},
-			Color: Color0,
+			AABB:           AABB{50, 50, 128, 128},
+			IdleAnimation:  idle,
+			LeftAnimation:  left,
+			RightAnimation: right,
+			Color:          Color0,
 		},
 	}
 	hero := &Hero{
@@ -214,6 +299,8 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	FrameCount += 1
+
 	// NB: Order matters here! Later stuff draws over earlier stuff.
 	g.Room.Draw(screen)
 	g.Hero.Draw(screen)

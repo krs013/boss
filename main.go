@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	ScreenWidth  = 1920
-	ScreenHeight = 1080
+	ScreenWidth  = 1280
+	ScreenHeight = 800  // Or 720 for 16:9 aspect ratio
 )
 
 // NYX8 Palete - https://lospec.com/palette-list/nyx8

@@ -1,4 +1,4 @@
-module github.com/krs013/you-are-the-boss
+module github.com/krs013/boss
 
 go 1.19
 

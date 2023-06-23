@@ -1,99 +1,16 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
-	"image"
 	"image/color"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
 )
 
 const (
 	ScreenWidth  = 1280
 	ScreenHeight = 800 // Or 720 for 16:9 aspect ratio
-)
-
-var FrameCount = 1
-
-type Animation struct {
-	Sheet            *ebiten.Image
-	X, Y, W, H, N, S int
-	Op               ebiten.GeoM
-}
-
-func PlaceholderAnimations() (idle, left, right *Animation) {
-	img, _, err := image.Decode(bytes.NewReader(images.Runner_png))
-	if err != nil {
-		log.Fatal(err)
-	}
-	sheet := ebiten.NewImageFromImage(img)
-
-	op := ebiten.GeoM{}
-	op.Scale(4, 4)
-	idle = &Animation{
-		Sheet: sheet,
-		X:     0,
-		Y:     0,
-		W:     32,
-		H:     32,
-		N:     5,
-		S:     5,
-		Op:    op,
-	}
-
-	right = &Animation{
-		Sheet: sheet,
-		X:     0,
-		Y:     32,
-		W:     32,
-		H:     32,
-		N:     8,
-		S:     5,
-		Op:    op,
-	}
-
-	op.Scale(-1, 1)
-	op.Translate(128, 0)
-	left = &Animation{
-		Sheet: sheet,
-		X:     0,
-		Y:     32,
-		W:     32,
-		H:     32,
-		N:     8,
-		S:     5,
-		Op:    op,
-	}
-
-	return idle, left, right
-}
-
-func (a Animation) Draw(dst *ebiten.Image, x, y float64) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Concat(a.Op)
-	op.GeoM.Translate(x, y)
-	i := (FrameCount / a.S) % a.N
-	rect := image.Rect(a.X+i*a.W, a.Y, a.X+(i+1)*a.W, a.Y+a.H)
-	sprite := a.Sheet.SubImage(rect).(*ebiten.Image)
-	dst.DrawImage(sprite, op)
-	ebitenutil.DebugPrintAt(dst, fmt.Sprintf("%d %d", FrameCount, i), 0, 0)
-	ebitenutil.DebugPrintAt(dst, fmt.Sprintf("%f %f", ebiten.ActualFPS(), ebiten.ActualTPS()), 0, 20)
-}
-
-// NYX8 Palete - https://lospec.com/palette-list/nyx8
-var (
-	Color0 = color.RGBA{0xF6, 0xD6, 0xBD, 0xFF}
-	Color1 = color.RGBA{0xC3, 0xA3, 0x8A, 0xFF}
-	Color2 = color.RGBA{0x99, 0x75, 0x77, 0xFF}
-	Color3 = color.RGBA{0x81, 0x62, 0x71, 0xFF}
-	Color4 = color.RGBA{0x4E, 0x49, 0x5F, 0xFF}
-	Color5 = color.RGBA{0x20, 0x39, 0x4F, 0xFF}
-	Color6 = color.RGBA{0x0F, 0x2A, 0x3F, 0xFF}
-	Color7 = color.RGBA{0x08, 0x14, 0x1E, 0xFF}
 )
 
 type Trigger struct {
@@ -261,7 +178,7 @@ func NewGame() *Game {
 		Wall:   Color6,
 		Button: Color3,
 	}
-	idle, left, right := PlaceholderAnimations()
+	idle, left, right := BossAnimations()
 	boss := &Boss{
 		Mob: Mob{
 			AABB:           AABB{50, 50, 128, 128},
@@ -299,8 +216,6 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	FrameCount += 1
-
 	// NB: Order matters here! Later stuff draws over earlier stuff.
 	g.Room.Draw(screen)
 	g.Hero.Draw(screen)

@@ -17,20 +17,21 @@ type Scene interface {
 }
 
 type Game struct {
-	CurrenScene Scene
+	Scene
 }
 
 func NewGame() *Game {
-	return nil
-	//return &Game{room, boss, hero}
+	return &Game{
+		Scene: NewMenu(),
+	}
 }
 
 func (g *Game) Update() error {
-	return g.CurrenScene.Update(g)
+	return g.Scene.Update(g)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.CurrenScene.Draw(screen)
+	g.Scene.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

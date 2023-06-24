@@ -50,7 +50,10 @@ func NewWait() *Wait {
 	}
 }
 
-func (w *Wait) Update() error {
+func (w *Wait) Update(g *Game) error {
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+		g.Scene = NewMenu()
+	}
 	// NB: Order matters here! Only the Boss resolves hero-boss pushing
 	// interaction, so boss must go after hero has done naive moves.
 	w.Hero.Update(w)

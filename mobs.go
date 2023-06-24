@@ -102,7 +102,7 @@ func (b *Boss) MouseTarget() (x, y float64, ok bool) {
 	return b.X, b.Y, false
 }
 
-func (b *Boss) Update(w *Wait) {
+func (b *Boss) Update(w *WaitScene) {
 	tx, ty, ok := b.KeyTarget()
 	if ok {
 		b.HasTarget = false
@@ -132,7 +132,7 @@ type Hero struct {
 	Mob
 }
 
-func (h *Hero) Update(w *Wait) {
+func (h *Hero) Update(w *WaitScene) {
 	// Set target so hero center moves towards the boss center.
 	h.TargetX = w.Boss.X + w.Boss.W/2 - h.W/2
 	h.TargetY = w.Boss.Y + w.Boss.H/2 - h.H/2

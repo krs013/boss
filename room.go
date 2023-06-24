@@ -22,7 +22,7 @@ type Room struct {
 	Button color.Color
 }
 
-func (r Room) Update(w *Wait) {
+func (r Room) Update(w *WaitScene) {
 	for _, t := range r.Triggers {
 		if w.Boss.Collide(t.AABB) {
 			if t.Fn != nil {

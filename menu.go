@@ -35,7 +35,7 @@ func NewMenu() *Menu {
 
 func (m *Menu) Update(g *Game) error {
 	if len(ebiten.AppendInputChars(nil)) > 0 {
-		g.Scene = NewWait()
+		g.Scene = NewWaitScene()
 	}
 	return nil
 }

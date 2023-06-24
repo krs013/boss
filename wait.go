@@ -2,19 +2,21 @@ package main
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-type Wait struct {
+type WaitScene struct {
 	Room *Room
 	Boss *Boss
 	Hero *Hero
 }
 
-func NewWait() *Wait {
+func NewWaitScene() *WaitScene {
 	room := &Room{
 		Width:  ScreenWidth,
 		Height: ScreenHeight,
 		Obstacles: []AABB{
-			{10, 10, 300, 40},
-			{10, 40, 40, 200},
+			{0, 0, ScreenWidth, 40},
+			{0, ScreenHeight - 40, ScreenWidth, 40},
+			{0, 40, 40, ScreenHeight - 80},
+			{ScreenWidth - 40, 40, 40, ScreenHeight - 80},
 		},
 		Floor:  Color7,
 		Wall:   Color6,
@@ -43,14 +45,14 @@ func NewWait() *Wait {
 			hero.Y = ScreenHeight / 2
 		},
 	})
-	return &Wait{
+	return &WaitScene{
 		Room: room,
 		Boss: boss,
 		Hero: hero,
 	}
 }
 
-func (w *Wait) Update(g *Game) error {
+func (w *WaitScene) Update(g *Game) error {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		g.Scene = NewMenu()
 	}
@@ -64,7 +66,7 @@ func (w *Wait) Update(g *Game) error {
 	return nil
 }
 
-func (w *Wait) Draw(screen *ebiten.Image) {
+func (w *WaitScene) Draw(screen *ebiten.Image) {
 	// NB: Order matters here! Later stuff draws over earlier stuff.
 	w.Room.Draw(screen)
 	w.Hero.Draw(screen)

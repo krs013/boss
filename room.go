@@ -22,9 +22,9 @@ type Room struct {
 	Button color.Color
 }
 
-func (r Room) Update(g *Game) {
+func (r Room) Update(w *Wait) {
 	for _, t := range r.Triggers {
-		if g.Boss.Collide(t.AABB) {
+		if w.Boss.Collide(t.AABB) {
 			if t.Fn != nil {
 				t.Fn()
 			}

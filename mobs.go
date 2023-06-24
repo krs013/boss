@@ -102,7 +102,7 @@ func (b *Boss) MouseTarget() (x, y float64, ok bool) {
 	return b.X, b.Y, false
 }
 
-func (b *Boss) Update(g *Game) {
+func (b *Boss) Update(w *Wait) {
 	tx, ty, ok := b.KeyTarget()
 	if ok {
 		b.HasTarget = false
@@ -116,26 +116,26 @@ func (b *Boss) Update(g *Game) {
 	b.DY = UpdateDelta(b.DY, b.Y, ty)
 
 	b.Move()
-	b.DetangleRoom(g.Room)
-	b.ClampToRoom(g.Room)
+	b.DetangleRoom(w.Room)
+	b.ClampToRoom(w.Room)
 
 	// Boss pushes the hero, so hero does the detangle, not boss.
-	g.Hero.Detangle(b.AABB)
+	w.Hero.Detangle(b.AABB)
 	// After hero gets pushed, hero might need to avoid obstacles.
-	g.Hero.DetangleRoom(g.Room)
-	g.Hero.ClampToRoom(g.Room)
+	w.Hero.DetangleRoom(w.Room)
+	w.Hero.ClampToRoom(w.Room)
 	// Hero might push back if they don't fit, so now boss detangles
-	b.Detangle(g.Hero.AABB)
+	b.Detangle(w.Hero.AABB)
 }
 
 type Hero struct {
 	Mob
 }
 
-func (h *Hero) Update(g *Game) {
+func (h *Hero) Update(w *Wait) {
 	// Set target so hero center moves towards the boss center.
-	h.TargetX = g.Boss.X + g.Boss.W/2 - h.W/2
-	h.TargetY = g.Boss.Y + g.Boss.H/2 - h.H/2
+	h.TargetX = w.Boss.X + w.Boss.W/2 - h.W/2
+	h.TargetY = w.Boss.Y + w.Boss.H/2 - h.H/2
 	h.TrackTarget()
 
 	// Just do the move. Boss will handle collisions and pushing.

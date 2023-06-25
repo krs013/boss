@@ -12,7 +12,7 @@ const (
 )
 
 type Scene interface {
-	Update(g *Game) error
+	Update(g *Game)
 	Draw(*ebiten.Image)
 }
 
@@ -27,7 +27,8 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
-	return g.Scene.Update(g)
+	g.Scene.Update(g)
+	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {

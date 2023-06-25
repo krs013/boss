@@ -2,18 +2,23 @@ package main
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-type WaitScene struct {
+type RoomScene struct {
 	Room *Room
 	Boss *Boss
 	Hero *Hero
 }
 
-func NewWaitScene() *WaitScene {
+type WaitScene struct {
+	RoomScene
+}
+
+func NewWaitScene(g *Game) *WaitScene {
 	room := &Room{
 		Width:  ScreenWidth,
 		Height: ScreenHeight,
 		Obstacles: []AABB{
-			{0, 0, ScreenWidth, 40},
+			{0, 0, ScreenWidth/2 - 100, 40},
+			{ScreenWidth/2 + 100, 0, ScreenWidth/2 - 150, 40},
 			{0, ScreenHeight - 40, ScreenWidth, 40},
 			{0, 40, 40, ScreenHeight - 80},
 			{ScreenWidth - 40, 40, 40, ScreenHeight - 80},
@@ -38,32 +43,42 @@ func NewWaitScene() *WaitScene {
 			Color: Color1,
 		},
 	}
+	// Trigger to move to control room.
 	room.Triggers = append(room.Triggers, Trigger{
-		AABB: AABB{500, 500, 64, 64},
+		AABB: AABB{ScreenWidth/2 - 100, 0, 200, 1},
 		Fn: func() {
-			hero.X = ScreenWidth / 2
-			hero.Y = ScreenHeight / 2
+			g.Scene = NewCtrlScene(g)
 		},
 	})
+	// Trigger to open the control room door.
+	room.Triggers = append(room.Triggers, Trigger{
+		AABB: AABB{ScreenWidth/2 - 150, ScreenHeight - 115, 300, 75},
+		Fn:   nil,
+	})
+	// Trigger Lt. telling Boss to stay put.
+	room.Triggers = append(room.Triggers, Trigger{
+		AABB: AABB{ScreenWidth/2 - 150, 40, 300, 150},
+		Fn:   nil,
+	})
 	return &WaitScene{
-		Room: room,
-		Boss: boss,
-		Hero: hero,
+		RoomScene{
+			Room: room,
+			Boss: boss,
+			Hero: hero,
+		},
 	}
 }
 
-func (w *WaitScene) Update(g *Game) error {
+func (w *WaitScene) Update(g *Game) {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		g.Scene = NewMenu()
 	}
 	// NB: Order matters here! Only the Boss resolves hero-boss pushing
 	// interaction, so boss must go after hero has done naive moves.
-	w.Hero.Update(w)
-	w.Boss.Update(w)
+	w.Hero.Update(w.RoomScene)
+	w.Boss.Update(w.RoomScene)
 	// Once boss has moved, see if any triggers were tripped.
-	w.Room.Update(w)
-
-	return nil
+	w.Room.Update(w.RoomScene)
 }
 
 func (w *WaitScene) Draw(screen *ebiten.Image) {

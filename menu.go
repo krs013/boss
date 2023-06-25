@@ -33,14 +33,13 @@ func NewMenu() *Menu {
 	}
 }
 
-func (m *Menu) Update(g *Game) error {
+func (m *Menu) Update(g *Game) {
 	if len(ebiten.AppendInputChars(nil)) > 0 {
-		g.Scene = NewWaitScene()
+		g.Scene = NewWaitScene(g)
 	}
-	return nil
 }
 
 func (m *Menu) Draw(screen *ebiten.Image) {
 	screen.Fill(Color7)
-	text.Draw(screen, "You're the Boss!!", m.SplashFont, 400, 250, Color4)
+	text.Draw(screen, "You're the Boss!!!", m.SplashFont, 400, 250, Color4)
 }

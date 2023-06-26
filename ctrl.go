@@ -2,10 +2,12 @@ package main
 
 import "github.com/hajimehoshi/ebiten/v2"
 
+// CtrlScene has the Boss in the control room with the level design buttons.
 type CtrlScene struct {
-	RoomScene
+	SceneData
 }
 
+// NewCtrlScene creates a new control room scheme with boss at the door.
 func NewCtrlScene(g *Game) *CtrlScene {
 	room := &Room{
 		Width:  ScreenWidth,
@@ -33,18 +35,20 @@ func NewCtrlScene(g *Game) *CtrlScene {
 		},
 	}
 	return &CtrlScene{
-		RoomScene{
+		SceneData{
 			Room: room,
 			Boss: boss,
 		},
 	}
 }
 
+// Update updates the boss and triggers in the scene.
 func (c *CtrlScene) Update(g *Game) {
-	c.Boss.Update(c.RoomScene)
-	c.Room.Update(c.RoomScene)
+	c.Boss.Update(c.SceneData)
+	c.Room.Update(c.SceneData)
 }
 
+// Draw draws the boss in the control room.
 func (c *CtrlScene) Draw(screen *ebiten.Image) {
 	c.Room.Draw(screen)
 	c.Boss.Draw(screen)

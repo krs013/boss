@@ -10,6 +10,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
 )
 
+// Color constants used to draw placeholders for where we dont have assets yet.
 // NYX8 Palete - https://lospec.com/palette-list/nyx8
 var (
 	Color0 = color.RGBA{0xF6, 0xD6, 0xBD, 0xFF}
@@ -22,25 +23,36 @@ var (
 	Color7 = color.RGBA{0x08, 0x14, 0x1E, 0xFF}
 )
 
+// Animation plays a looping animation off a sprite sheet image.  We assume
+// that the frames of the animation are arraged horizontally on the sheet,
+// although there may be other unrelated images on the sheet.
 type Animation struct {
-	Sheet            *ebiten.Image
-	OffsetX, OffsetY int
-	Width, Height    int
-	NumFrames        int
-	FrameSpeed       int
-	Transform        ebiten.GeoM
+	// Sprite sheet. This image may be shared, so it shouldn't be modified.
+	Sheet *ebiten.Image
 
-	FrameCount int
+	OffsetX, OffsetY int // Location of the first frame of the animation.
+	Width, Height    int // Size of each frame of the animation.
+	NumFrames        int // How many frames are in the animation loop.
+	FrameSpeed       int // How long (in ticks) each frame lasts.
+
+	// A transform to apply to each frame image. This could include things like
+	// scaling to fit a hitbox or flipping to match a direction.
+	Transform ebiten.GeoM
+
+	// Internal counter for advancing through the animation loop.
+	frameCount int
 }
 
+// Sprite gets the subimage to draw this frame (also advances the frame counter).
 func (a *Animation) Sprite() *ebiten.Image {
-	a.FrameCount += 1
-	i := (a.FrameCount / a.FrameSpeed) % a.NumFrames
+	a.frameCount += 1
+	i := (a.frameCount / a.FrameSpeed) % a.NumFrames
 	sx := a.OffsetX + i*a.Width
 	rect := image.Rect(sx, a.OffsetY, sx+a.Width, a.OffsetY+a.Height)
 	return a.Sheet.SubImage(rect).(*ebiten.Image)
 }
 
+// Draw draws the current sprite on the dst image at the given (x, y) coordinate.
 func (a *Animation) Draw(dst *ebiten.Image, x, y float64) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Concat(a.Transform)
@@ -48,6 +60,8 @@ func (a *Animation) Draw(dst *ebiten.Image, x, y float64) {
 	dst.DrawImage(a.Sprite(), op)
 }
 
+// BossAnimations gets the (for now placeholder) animations for the boss.
+// TODO: Replace this with actual assets!!
 func BossAnimations() (idle, left, right *Animation) {
 	img, _, err := image.Decode(bytes.NewReader(images.Runner_png))
 	if err != nil {

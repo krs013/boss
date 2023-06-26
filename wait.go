@@ -2,16 +2,12 @@ package main
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-type RoomScene struct {
-	Room *Room
-	Boss *Boss
-	Hero *Hero
-}
-
+// WaitScene has the boss waiting in the throne room for something to happen.
 type WaitScene struct {
-	RoomScene
+	SceneData
 }
 
+// NewWaitScene creates the boss in their throne/waiting room. How boring.
 func NewWaitScene(g *Game) *WaitScene {
 	room := &Room{
 		Width:  ScreenWidth,
@@ -61,7 +57,7 @@ func NewWaitScene(g *Game) *WaitScene {
 		Fn:   nil,
 	})
 	return &WaitScene{
-		RoomScene{
+		SceneData{
 			Room: room,
 			Boss: boss,
 			Hero: hero,
@@ -69,18 +65,20 @@ func NewWaitScene(g *Game) *WaitScene {
 	}
 }
 
+// Update updates the boss, and runs any transition triggers in the scene.
 func (w *WaitScene) Update(g *Game) {
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
-		g.Scene = NewMenu()
+		g.Scene = NewMainMenu()
 	}
 	// NB: Order matters here! Only the Boss resolves hero-boss pushing
 	// interaction, so boss must go after hero has done naive moves.
-	w.Hero.Update(w.RoomScene)
-	w.Boss.Update(w.RoomScene)
+	w.Hero.Update(w.SceneData)
+	w.Boss.Update(w.SceneData)
 	// Once boss has moved, see if any triggers were tripped.
-	w.Room.Update(w.RoomScene)
+	w.Room.Update(w.SceneData)
 }
 
+// Draw draws the boss in the waiting room.
 func (w *WaitScene) Draw(screen *ebiten.Image) {
 	// NB: Order matters here! Later stuff draws over earlier stuff.
 	w.Room.Draw(screen)

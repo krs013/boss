@@ -10,11 +10,13 @@ import (
 	"golang.org/x/image/font/opentype"
 )
 
-type Menu struct {
+// MainMenu displays the game name between hero runs.
+type MainMenu struct {
 	SplashFont font.Face
 }
 
-func NewMenu() *Menu {
+// NewMainMenu returns a new MainMenu.
+func NewMainMenu() *MainMenu {
 	tt, err := opentype.Parse(fonts.PressStart2P_ttf)
 	if err != nil {
 		log.Fatal(err)
@@ -28,18 +30,20 @@ func NewMenu() *Menu {
 		log.Fatal(err)
 	}
 
-	return &Menu{
+	return &MainMenu{
 		SplashFont: font,
 	}
 }
 
-func (m *Menu) Update(g *Game) {
+// Update advances to the waiting room if any key is pressed.
+func (m *MainMenu) Update(g *Game) {
 	if len(ebiten.AppendInputChars(nil)) > 0 {
 		g.Scene = NewWaitScene(g)
 	}
 }
 
-func (m *Menu) Draw(screen *ebiten.Image) {
+// Draw just draws the opening splash screen.
+func (m *MainMenu) Draw(screen *ebiten.Image) {
 	screen.Fill(Color7)
 	text.Draw(screen, "You're the Boss!!!", m.SplashFont, 400, 250, Color4)
 }

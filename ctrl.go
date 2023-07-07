@@ -1,10 +1,19 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+)
+
+type Button struct {
+	AABB
+	Pressed bool
+}
 
 // CtrlScene has the Boss in the control room with the level design buttons.
 type CtrlScene struct {
 	SceneData
+	Buttons []Button
 }
 
 // NewCtrlScene creates a new control room scheme with boss at the door.
@@ -34,11 +43,32 @@ func NewCtrlScene(g *Game) *CtrlScene {
 			Color:          Color0,
 		},
 	}
+	room.Triggers = append(room.Triggers, Trigger{
+		AABB: AABB{ScreenWidth/2 - 150, ScreenHeight - 1, 300, 1},
+		Fn: func() {
+			g.Scene = NewWaitScene(g)
+		},
+	})
+	var buttons []Button
+	for i := 0; i < 8; i++ {
+		i := i
+		button := Button{
+			AABB: AABB{100 + 150*float64(i), 100, 32, 32},
+		}
+		buttons = append(buttons, button)
+		room.Triggers = append(room.Triggers, Trigger{
+			AABB: button.AABB,
+			Fn: func() {
+				buttons[i].Pressed = true
+			},
+		})
+	}
 	return &CtrlScene{
 		SceneData{
 			Room: room,
 			Boss: boss,
 		},
+		buttons,
 	}
 }
 
@@ -51,5 +81,10 @@ func (c *CtrlScene) Update(g *Game) {
 // Draw draws the boss in the control room.
 func (c *CtrlScene) Draw(screen *ebiten.Image) {
 	c.Room.Draw(screen)
+	for _, btn := range c.Buttons {
+		if btn.Pressed {
+			ebitenutil.DrawRect(screen, btn.X, btn.Y, btn.W, btn.H, Color6)
+		}
+	}
 	c.Boss.Draw(screen)
 }

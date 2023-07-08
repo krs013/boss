@@ -143,3 +143,10 @@ func (h *Hero) Update(s SceneData) {
 	// Just do the move. Boss will handle collisions and pushing.
 	h.Move()
 }
+
+type Mate struct {
+	Mob
+}
+
+func (m *Mate) Update(s SceneData) {
+}

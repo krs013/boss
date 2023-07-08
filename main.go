@@ -27,6 +27,7 @@ type SceneData struct {
 	Room *Room
 	Boss *Boss
 	Hero *Hero
+	Mate *Mate
 }
 
 // Game is contains all game info, including the current Scene.

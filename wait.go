@@ -8,7 +8,7 @@ type WaitScene struct {
 }
 
 // NewWaitScene creates the boss in their throne/waiting room. How boring.
-func NewWaitScene(g *Game) *WaitScene {
+func NewWaitScene(g *Game, bossX, bossY float64) *WaitScene {
 	room := &Room{
 		Width:  ScreenWidth,
 		Height: ScreenHeight,
@@ -26,14 +26,14 @@ func NewWaitScene(g *Game) *WaitScene {
 	idle, left, right := BossAnimations()
 	boss := &Boss{
 		Mob: Mob{
-			AABB:           AABB{50, 50, 128, 128},
+			AABB:           AABB{bossX, bossY, 128, 128},
 			IdleAnimation:  idle,
 			LeftAnimation:  left,
 			RightAnimation: right,
 			Color:          Color0,
 		},
 	}
-	hero := &Hero{
+	mate := &Mate{
 		Mob: Mob{
 			AABB:  AABB{250, 400, 64, 64},
 			Color: Color1,
@@ -60,28 +60,19 @@ func NewWaitScene(g *Game) *WaitScene {
 		SceneData{
 			Room: room,
 			Boss: boss,
-			Hero: hero,
+			Mate: mate,
 		},
 	}
 }
 
 // Update updates the boss, and runs any transition triggers in the scene.
 func (w *WaitScene) Update(g *Game) {
-	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
-		g.Scene = NewMainMenu()
-	}
-	// NB: Order matters here! Only the Boss resolves hero-boss pushing
-	// interaction, so boss must go after hero has done naive moves.
-	w.Hero.Update(w.SceneData)
 	w.Boss.Update(w.SceneData)
-	// Once boss has moved, see if any triggers were tripped.
 	w.Room.Update(w.SceneData)
 }
 
 // Draw draws the boss in the waiting room.
 func (w *WaitScene) Draw(screen *ebiten.Image) {
-	// NB: Order matters here! Later stuff draws over earlier stuff.
 	w.Room.Draw(screen)
-	w.Hero.Draw(screen)
 	w.Boss.Draw(screen)
 }

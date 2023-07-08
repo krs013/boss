@@ -33,7 +33,7 @@ func NewCtrlScene(g *Game) *CtrlScene {
 		Button: Color3,
 	}
 	idle, left, right := BossAnimations()
-	bossX, bossY := ScreenWidth/2-64., ScreenHeight-128.
+	bossX, bossY := ScreenWidth/2-64., ScreenHeight-129.
 	boss := &Boss{
 		Mob: Mob{
 			AABB:           AABB{bossX, bossY, 128, 128},
@@ -46,7 +46,7 @@ func NewCtrlScene(g *Game) *CtrlScene {
 	room.Triggers = append(room.Triggers, Trigger{
 		AABB: AABB{ScreenWidth/2 - 150, ScreenHeight - 1, 300, 1},
 		Fn: func() {
-			g.Scene = NewWaitScene(g)
+			g.Scene = NewWaitScene(g, ScreenWidth/2-64, 1)
 		},
 	})
 	var buttons []Button

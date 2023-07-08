@@ -38,7 +38,7 @@ func NewMainMenu() *MainMenu {
 // Update advances to the waiting room if any key is pressed.
 func (m *MainMenu) Update(g *Game) {
 	if len(ebiten.AppendInputChars(nil)) > 0 {
-		g.Scene = NewWaitScene(g)
+		g.Scene = NewWaitScene(g, 50, 50)
 	}
 }
 

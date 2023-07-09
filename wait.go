@@ -14,7 +14,7 @@ func NewWaitScene(g *Game, bossX, bossY float64) *WaitScene {
 		Height: ScreenHeight,
 		Obstacles: []AABB{
 			{0, 0, ScreenWidth/2 - 100, 40},
-			{ScreenWidth/2 + 100, 0, ScreenWidth/2 - 150, 40},
+			{ScreenWidth/2 + 100, 0, ScreenWidth/2 - 100, 40},
 			{0, ScreenHeight - 40, ScreenWidth, 40},
 			{0, 40, 40, ScreenHeight - 80},
 			{ScreenWidth - 40, 40, 40, ScreenHeight - 80},

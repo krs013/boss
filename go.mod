@@ -1,6 +1,6 @@
 module github.com/krs013/boss
 
-go 1.20
+go 1.19
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.5.4

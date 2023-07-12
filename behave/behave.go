@@ -94,3 +94,57 @@ func (s *selection) Execute() State {
 	}
 	return Failure
 }
+
+type Conditional func() bool
+
+func (c Conditional) Execute() State {
+	if c() {
+		return Success
+	}
+	return Failure
+}
+
+type decorator struct {
+	node Behavior
+	fn   func(State) State
+}
+
+func (d *decorator) Reset() {
+	d.node.Reset()
+}
+
+func (d *decorator) Execute() State {
+	return d.fn(d.node.Execute())
+}
+
+func invert(s State) State {
+	switch s {
+	case Running:
+		return Running
+	case Success:
+		return Failure
+	case Failure:
+		return Success
+	default:
+		return Unknown
+	}
+}
+
+func Invert(b Behavior) Behavior {
+	return &decorator{b, invert}
+}
+
+func Repeat(b Behavior) Behavior {
+	repeat := func(s State) State {
+		switch s {
+		case Success, Failure:
+			b.Reset()
+			fallthrough
+		case Running:
+			return Running
+		default:
+			return Unknown
+		}
+	}
+	return &decorator{b, repeat}
+}
